@@ -7,7 +7,6 @@ phases:
     commands:
       - pip install --upgrade pip
       - pip install pipenv --user
-      - pipenv install awscli aws-sam-cli
       - aws cloudformation --template-file template.yml --s3-bucket lambda-deployment-voice-album --output-template-file packaged-template.yml
 artifacts:
   files:
