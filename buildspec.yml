@@ -2,7 +2,7 @@ version: 0.2
 phases:
   install:
     commands:
-        - aws cloudformation --template-file template.yml --s3-bucket lambda-deployment-voice-album --output-template-file packaged-template.yml
+        - aws cloudformation package --template-file template.yml --s3-bucket lambda-deployment-voice-album --output-template-file packaged-template.yml
 artifacts:
   files:
     - template.yaml
