@@ -1,11 +1,9 @@
 version: 0.2
 phases:
   install:
-    runtime-versions:
-        python: 3.8
-  build:
     commands:
-      - aws cloudformation --template-file template.yml --s3-bucket lambda-deployment-voice-album --output-template-file packaged-template.yml
+        - aws cloudformation --template-file template.yml --s3-bucket lambda-deployment-voice-album --output-template-file packaged-template.yml
 artifacts:
   files:
+    - template.yaml
     - packaged-template.yml
