@@ -13,3 +13,4 @@ Resources:
       Handler: searchPhotos.lambda_handler
       Runtime: python3.8
       CodeUri: ./lambdas/
+
