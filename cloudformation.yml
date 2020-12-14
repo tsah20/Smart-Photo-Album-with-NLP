@@ -1,0 +1,420 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Photo Album Cloud Formation
+Resources:
+  Bucket:
+    Type: 'AWS::S3::Bucket'
+    DependsOn: BucketPermission
+    Properties:
+      BucketName: vcs4combined
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt 
+              - S3ObjectFunction
+              - Arn
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fabfd678-495e-4b53-95c0-ef442cb0cdca
+  BucketPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref S3ObjectFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: 'arn:aws:s3:::vcs4combined'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 3df3d780-5e86-4ccb-8190-16fb2d7a6369
+  
+  S3ObjectFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Description: S3 Object Custom Resource
+      Handler: lambda_function.lambda_handler
+      Role: 'arn:aws:iam::710114258989:role/photolambdarole'
+      FunctionName: s3_trigger_lambda_combined
+      Code:
+        S3Bucket: voicesearchb2
+        S3Key: Archive.zip
+      Timeout: 60
+      Runtime: python3.8
+  
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 4ec1f6ac-40c2-4482-be44-e3ff887990c0
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: PublicRead
+      BucketName: photowebsitecombined
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+    DeletionPolicy: Retain
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 421fe320-135c-4b09-bd3e-8e48ddf148e1
+  BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Id: MyPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref S3Bucket
+                - /*
+      Bucket: !Ref S3Bucket
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: b25eab95-b2b8-4f1c-8092-7186f5ef0758
+  ApiGatewayRestApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      ApiKeySourceType: HEADER
+      Description: An API Gateway with a Lambda Integration
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: lambdaapicombined
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+  ApiGatewayResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      ParentId: !GetAtt 
+        - ApiGatewayRestApi
+        - RootResourceId
+      PathPart: search
+      RestApiId: !Ref ApiGatewayRestApi
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 10d790d6-8735-4afd-977e-e5705a278cd6
+  ApiGatewayMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        ConnectionType: INTERNET
+        Credentials: !GetAtt 
+          - ApiGatewayIamRole
+          - Arn
+        IntegrationHttpMethod: POST
+        PassthroughBehavior: WHEN_NO_MATCH
+        TimeoutInMillis: 29000
+        Type: AWS
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction1.Arn}/invocations
+        IntegrationResponses:
+          - ResponseTemplates:
+              application/json: ''
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: '''*'''
+              method.response.header.Access-Control-Allow-Methods: '''POST,OPTIONS'''
+              method.response.header.Access-Control-Allow-Headers: >-
+                'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
+            StatusCode: 200
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
+          StatusCode: 200
+      OperationName: lambda
+      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref ApiGatewayRestApi
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 5b54cb76-c705-4f5a-9cbf-585c4c7a68e8
+  OptionsMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+        IntegrationResponses:
+          - ResponseTemplates:
+              application/json: ''
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: '''*'''
+              method.response.header.Access-Control-Allow-Methods: '''POST,OPTIONS'''
+              method.response.header.Access-Control-Allow-Headers: >-
+                'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
+            StatusCode: 200
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
+          ResponseModels:
+            application/json: Empty
+          StatusCode: 200
+      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref ApiGatewayRestApi
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 8bc44bbf-934f-4404-a744-ccecd5bc0d78
+  ApiGatewayModel:
+    Type: 'AWS::ApiGateway::Model'
+    Properties:
+      ContentType: application/json
+      RestApiId: !Ref ApiGatewayRestApi
+      Schema: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: d8ecec7f-c902-4686-b4d3-25156c4f7023
+  ApiGatewayStage:
+    Type: 'AWS::ApiGateway::Stage'
+    Properties:
+      DeploymentId: !Ref ApiGatewayDeployment
+      Description: Lambda API Stage v0
+      RestApiId: !Ref ApiGatewayRestApi
+      StageName: dev
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: c4376f2b-bb1b-4734-adcc-9a5f263428d6
+  ApiGatewayDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn: ApiGatewayMethod
+    Properties:
+      Description: Lambda API Deployment
+      RestApiId: !Ref ApiGatewayRestApi
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 44057c4e-3012-4b02-b757-1c16bb8349c3
+  ApiGatewayIamRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: LambdaAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'lambda:*'
+                Resource: !GetAtt 
+                  - LambdaFunction1
+                  - Arn
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 4d848702-c107-43b3-a103-451d4d98c662
+  LambdaFunction1:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: voicesearchb2
+        S3Key: Archive.zip
+      Description: AWS Lambda function
+      FunctionName: combinedsearchlambda
+      Handler: lambda_function.lambda_handler
+      MemorySize: 256
+      Role: 'arn:aws:iam::710114258989:role/photolambdarole'
+      Runtime: python3.7
+      Timeout: 60
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 957d2864-ae43-49d3-a552-214790f6e94e
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt 
+      - S3Bucket
+      - WebsiteURL
+    Description: URL for website hosted on S3
+  S3BucketSecureURL:
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !GetAtt 
+          - S3Bucket
+          - DomainName
+    Description: Name of S3 bucket to hold website content
+Metadata:
+  'AWS::CloudFormation::Designer':
+    957d2864-ae43-49d3-a552-214790f6e94e:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 630
+        'y': 90
+      z: 1
+      embeds: []
+    4d848702-c107-43b3-a103-451d4d98c662:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 630
+        'y': 210
+      z: 1
+      embeds: []
+    0f6ae2d1-cf6e-4023-bb01-e25e44529c8d:
+      size:
+        width: 510
+        height: 510
+      position:
+        x: -360
+        'y': 110
+      z: 1
+      embeds:
+        - d8ecec7f-c902-4686-b4d3-25156c4f7023
+        - 10d790d6-8735-4afd-977e-e5705a278cd6
+        - 44057c4e-3012-4b02-b757-1c16bb8349c3
+        - c4376f2b-bb1b-4734-adcc-9a5f263428d6
+    d8ecec7f-c902-4686-b4d3-25156c4f7023:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -330
+        'y': 470
+      z: 2
+      parent: 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+      embeds: []
+      iscontainedinside:
+        - 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+    10d790d6-8735-4afd-977e-e5705a278cd6:
+      size:
+        width: 330
+        height: 240
+      position:
+        x: -330
+        'y': 170
+      z: 2
+      parent: 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+      embeds:
+        - 8bc44bbf-934f-4404-a744-ccecd5bc0d78
+        - 5b54cb76-c705-4f5a-9cbf-585c4c7a68e8
+      iscontainedinside:
+        - 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+    8bc44bbf-934f-4404-a744-ccecd5bc0d78:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -300
+        'y': 230
+      z: 3
+      parent: 10d790d6-8735-4afd-977e-e5705a278cd6
+      embeds: []
+      iscontainedinside:
+        - 10d790d6-8735-4afd-977e-e5705a278cd6
+        - 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+    5b54cb76-c705-4f5a-9cbf-585c4c7a68e8:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -180
+        'y': 230
+      z: 3
+      parent: 10d790d6-8735-4afd-977e-e5705a278cd6
+      embeds: []
+      iscontainedinside:
+        - 10d790d6-8735-4afd-977e-e5705a278cd6
+        - 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+    44057c4e-3012-4b02-b757-1c16bb8349c3:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -210
+        'y': 470
+      z: 2
+      parent: 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+      embeds: []
+      iscontainedinside:
+        - 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+      dependson:
+        - 5b54cb76-c705-4f5a-9cbf-585c4c7a68e8
+    c4376f2b-bb1b-4734-adcc-9a5f263428d6:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -90
+        'y': 470
+      z: 2
+      parent: 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+      embeds: []
+      isassociatedwith:
+        - 44057c4e-3012-4b02-b757-1c16bb8349c3
+      iscontainedinside:
+        - 0f6ae2d1-cf6e-4023-bb01-e25e44529c8d
+    421fe320-135c-4b09-bd3e-8e48ddf148e1:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 630
+        'y': 330
+      z: 1
+      embeds: []
+    b25eab95-b2b8-4f1c-8092-7186f5ef0758:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 630
+        'y': 450
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 421fe320-135c-4b09-bd3e-8e48ddf148e1
+    4ec1f6ac-40c2-4482-be44-e3ff887990c0:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 630
+        'y': 570
+      z: 1
+      embeds: []
+    3df3d780-5e86-4ccb-8190-16fb2d7a6369:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 60
+        'y': 660
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4ec1f6ac-40c2-4482-be44-e3ff887990c0
+    fabfd678-495e-4b53-95c0-ef442cb0cdca:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 180
+        'y': 660
+      z: 1
+      embeds: []
+      dependson:
+        - 3df3d780-5e86-4ccb-8190-16fb2d7a6369
