@@ -127,8 +127,8 @@ header("Access-Control-Allow-Headers: Content-Type, Depth, User-Agent, X-File-Si
 <script type="text/javascript">
     /* Connect with API Gateway */
     var apigClient = apigClientFactory.newClient({
-        accessKey: 'AKIA2KVQ3WAWRRL2E76Y',
-        secretKey: '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'
+        //accessKey: '',
+        //secretKey: ''
     });
 
     function showImage(src, width, height, alt) {
@@ -155,7 +155,7 @@ header("Access-Control-Allow-Headers: Content-Type, Depth, User-Agent, X-File-Si
 
             let config = {
                 headers: {
-                    'Content-Type': files.type, "X-Api-Key": "ucOy8pEoEo5tGcTgEj7kw9qVPl9h2sPk3K3YVztF", 'Access-Control-Allow-Origin': '*',
+                    'Content-Type': files.type, "X-Api-Key": "", 'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'PUT'
                 }
             };
@@ -179,7 +179,7 @@ header("Access-Control-Allow-Headers: Content-Type, Depth, User-Agent, X-File-Si
         };
         console.log(data.type);
         console.log("-----------------");
-        url = 'https://0ltrncvfc0.execute-api.us-east-1.amazonaws.com/AG3/upload/photoss34/test.mp3'
+        url = ''
         axios.put(url, data, config).then(response => {
             console.log(response.data)
             alert("Upload successful!!");

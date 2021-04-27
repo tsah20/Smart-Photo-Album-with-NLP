@@ -3,7 +3,7 @@ document.getElementById("displaytext").style.display = "none";
 function searchPhoto() {
 
   var apigClient = apigClientFactory.newClient({
-    apiKey: 'gnavV2E0Pz5Kit0HSnfqL8loqijjhvHH7gZTVV9Z'
+    //apiKey: ''
   });
 
   var image_message = document.getElementById("note-textarea").value;
@@ -15,7 +15,7 @@ function searchPhoto() {
   var body = {};
   var params = {
     q: image_message,
-    'x-api-key': 'gnavV2E0Pz5Kit0HSnfqL8loqijjhvHH7gZTVV9Z'
+    //'x-api-key': ''
   };
   var additionalParams = {
     headers: {
@@ -89,7 +89,7 @@ function uploadPhoto() {
     data => {
       console.log(data)
       var apigClient = apigClientFactory.newClient({
-        apiKey: "gnavV2E0Pz5Kit0HSnfqL8loqijjhvHH7gZTVV9Z",
+        //apiKey: "",
         defaultContentType: "image/jpeg",
         defaultAcceptType: "image/jpeg"
       });
@@ -104,7 +104,7 @@ function uploadPhoto() {
       var params = {
         "item": file.name,
         "folder": "photosforsearch1",
-        'x-api-key': 'gnavV2E0Pz5Kit0HSnfqL8loqijjhvHH7gZTVV9Z'
+        //'x-api-key': ''
       };
 
       var additionalParams = {

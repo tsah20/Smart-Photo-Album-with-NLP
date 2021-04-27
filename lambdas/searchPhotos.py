@@ -49,7 +49,7 @@ def lambda_handler(event, context):
 		
 		s3client = boto3.client('s3')
 		response = s3client.delete_object(
-		    Bucket='photoss34',
+		    Bucket='',
 		    Key='test.mp3'
 		)
 		query = trans_text["results"]['transcripts'][0]['transcript']
@@ -64,7 +64,7 @@ def lambda_handler(event, context):
 	
 	if query == "voiceResult":
 		s3client = boto3.client('s3')
-		data = s3client.get_object(Bucket='photoss34', Key='test.txt')
+		data = s3client.get_object(Bucket='photoss34', Key='')
 		query = data.get('Body').read().decode('utf-8')
 		print("Voice query: ", query)
 		s3client.delete_object(
